@@ -1,0 +1,32 @@
+record-vcd waveform.vcd
+poke io_M_M0 0x61626364
+poke io_M_M1 0x62636465
+poke io_M_M2 0x63646566
+poke io_M_M3 0x64656667
+poke io_M_M4 0x65666768
+poke io_M_M5 0x66676869
+poke io_M_M6 0x6768696a
+poke io_M_M7 0x68696a6b
+poke io_M_M8 0x696a6b6c
+poke io_M_M9 0x6a6b6c6d
+poke io_M_M10 0x6b6c6d6e
+poke io_M_M11 0x6c6d6e6f
+poke io_M_M12 0x6d6e6f70
+poke io_M_M13 0x6e6f7071
+poke io_M_M14 0x80000000
+poke io_M_M15 0x00000000
+poke reset 1
+poke io_init 0
+poke io_start 0
+step 2
+poke reset 0
+poke io_init 1
+poke io_start 0
+step 1
+poke io_init 0
+poke io_start 1
+step 1
+poke io_init 0
+poke io_start 0
+step 70
+record-vcd done
