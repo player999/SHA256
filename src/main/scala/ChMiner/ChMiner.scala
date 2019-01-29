@@ -468,3 +468,203 @@ class Sha256Calc extends Module {
     }
   }
 }
+
+class AC_AXI4(width: Int) extends Bundle {
+  val valid = Input(Bool())
+  val ready = Output(Bool())
+  val addr = Input(UInt(width.W))
+  val prot = Input(UInt(3.W))
+}
+
+class WD_AXI4(width: Int) extends Bundle {
+  val valid = Input(Bool())
+  val ready = Output(Bool())
+  val data = Input(UInt(width.W))
+  val strb = Input(UInt((width / 8).W))
+}
+
+class RD_AXI4(width: Int) extends Bundle {
+  val valid = Output(Bool())
+  val ready = Input(Bool())
+  val data = Output(UInt(width.W))
+  val resp = Output(UInt(2.W))
+}
+
+class B_AXI4 extends Bundle {
+  val valid = Output(Bool())
+  val ready = Input(Bool())
+  val resp = Output(UInt(2.W))
+}
+
+class Sha256AXI4 extends Module {
+  val io = IO(new Bundle {
+    val wa = new AC_AXI4(8)
+    val wd = new WD_AXI4(32)
+    val ra = new AC_AXI4(8)
+    val rd = new RD_AXI4(32)
+    val b  = new B_AXI4
+  })
+  val waddr = RegInit(0.U(8.W))
+  val ra_ready = RegInit(true.B)
+  val wa_ready = RegInit(true.B)
+  val rd_valid = RegInit(true.B)
+  val rresp = RegInit(0.U(2.W))
+  val wd_ready = RegInit(true.B)
+  val wresp = RegInit(0.U(2.W))
+  val rdata = RegInit(0.U(32.W))
+
+  val calc = Module(new Sha256Calc)
+  val Mreg0 = RegInit(0.U(32.W))
+  val Mreg1 = RegInit(0.U(32.W))
+  val Mreg2 = RegInit(0.U(32.W))
+  val Mreg3 = RegInit(0.U(32.W))
+  val Mreg4 = RegInit(0.U(32.W))
+  val Mreg5 = RegInit(0.U(32.W))
+  val Mreg6 = RegInit(0.U(32.W))
+  val Mreg7 = RegInit(0.U(32.W))
+  val Mreg8 = RegInit(0.U(32.W))
+  val Mreg9 = RegInit(0.U(32.W))
+  val Mreg10 = RegInit(0.U(32.W))
+  val Mreg11 = RegInit(0.U(32.W))
+  val Mreg12 = RegInit(0.U(32.W))
+  val Mreg13 = RegInit(0.U(32.W))
+  val Mreg14 = RegInit(0.U(32.W))
+  val Mreg15 = RegInit(0.U(32.W))
+  val init = RegInit(false.B)
+  val start = RegInit(false.B)
+  /*
+  Memory MAP
+  0x00 - Control Status Register
+         0: init  (R/W)
+         1: start (R/W)
+         2: ready (R)
+  0x04 - Message0 (R/W)
+  0x08 - Message1 (R/W)
+  0x0C - Message2 (R/W)
+  0x10 - Message3 (R/W)
+  0x14 - Message4 (R/W)
+  0x18 - Message5 (R/W)
+  0x1C - Message6 (R/W)
+  0x20 - Message7 (R/W)
+  0x24 - Message8 (R/W)
+  0x28 - Message9 (R/W)
+  0x2C - Message10 (R/W)
+  0x30 - Message11 (R/W)
+  0x34 - Message12 (R/W)
+  0x38 - Message13 (R/W)
+  0x3C - Message14 (R/W)
+  0x40 - Message15 (R/W)
+  0x44 - Hash0 (R)
+  0x48 - Hash1 (R)
+  0x4C - Hash2 (R)
+  0x50 - Hash3 (R)
+  0x54 - Hash4 (R)
+  0x58 - Hash5 (R)
+  0x5C - Hash6 (R)
+  0x60 - Hash7 (R)
+  0x64 - Hash8 (R)
+  */
+  io.wa.ready <> wa_ready
+  io.ra.ready <> ra_ready
+  io.wd.ready <> wd_ready
+  io.rd.valid <> rd_valid
+  io.rd.resp := rresp
+  io.rd.data := rdata
+  io.b.valid := true.B
+  io.b.resp := wresp
+  calc.io.init := init
+  calc.io.start := start
+  calc.io.M(0) := Mreg0
+  calc.io.M(1) := Mreg1
+  calc.io.M(2) := Mreg2
+  calc.io.M(3) := Mreg3
+  calc.io.M(4) := Mreg4
+  calc.io.M(5) := Mreg5
+  calc.io.M(6) := Mreg6
+  calc.io.M(7) := Mreg7
+  calc.io.M(8) := Mreg8
+  calc.io.M(9) := Mreg9
+  calc.io.M(10) := Mreg10
+  calc.io.M(11) := Mreg11
+  calc.io.M(12) := Mreg12
+  calc.io.M(13) := Mreg13
+  calc.io.M(14) := Mreg14
+  calc.io.M(15) := Mreg15
+  init := 0.U
+  start := 0.U
+  when(io.wa.valid) {
+    waddr := io.wa.addr
+  }
+
+  when(io.ra.valid) {
+    switch(io.ra.addr(7,2)) {
+      is(0.U) {
+        rdata := Cat(calc.io.ready, start, init)
+      }
+      is(1.U) {rdata := Mreg0}
+      is(2.U) {rdata := Mreg1}
+      is(3.U) {rdata := Mreg2}
+      is(4.U) {rdata := Mreg3}
+      is(5.U) {rdata := Mreg4}
+      is(6.U) {rdata := Mreg5}
+      is(7.U) {rdata := Mreg6}
+      is(8.U) {rdata := Mreg7}
+      is(9.U) {rdata := Mreg8}
+      is(10.U) {rdata := Mreg9}
+      is(11.U) {rdata := Mreg10}
+      is(12.U) {rdata := Mreg11}
+      is(13.U) {rdata := Mreg12}
+      is(14.U) {rdata := Mreg13}
+      is(15.U) {rdata := Mreg14}
+      is(16.U) {rdata := Mreg15}
+      is(17.U) {rdata := calc.io.hout.a}
+      is(18.U) {rdata := calc.io.hout.b}
+      is(19.U) {rdata := calc.io.hout.c}
+      is(20.U) {rdata := calc.io.hout.d}
+      is(21.U) {rdata := calc.io.hout.e}
+      is(22.U) {rdata := calc.io.hout.f}
+      is(23.U) {rdata := calc.io.hout.g}
+      is(24.U) {rdata := calc.io.hout.h}
+    }
+    when(io.ra.addr(1,0) =/= 0.U) {
+      rresp := 2.U /*SLVERR*/
+    } .otherwise {
+      rresp := 0.U /*EXOKAY*/
+    }
+  }
+
+  when(io.wd.valid) {
+    switch(waddr(7,2)) {
+      is(0.U) {
+        init := io.wd.data(0)
+        start := io.wd.data(1)
+      }
+      is(1.U) {Mreg0 := io.wd.data}
+      is(2.U) {Mreg1 := io.wd.data}
+      is(3.U) {Mreg2 := io.wd.data}
+      is(4.U) {Mreg3 := io.wd.data}
+      is(5.U) {Mreg4 := io.wd.data}
+      is(6.U) {Mreg5 := io.wd.data}
+      is(7.U) {Mreg6 := io.wd.data}
+      is(8.U) {Mreg7 := io.wd.data}
+      is(9.U) {Mreg8 := io.wd.data}
+      is(10.U) {Mreg9 := io.wd.data}
+      is(11.U) {Mreg10 := io.wd.data}
+      is(12.U) {Mreg11 := io.wd.data}
+      is(13.U) {Mreg12 := io.wd.data}
+      is(14.U) {Mreg13 := io.wd.data}
+      is(15.U) {Mreg14 := io.wd.data}
+      is(16.U) {Mreg15 := io.wd.data}
+    }
+    when(waddr(1,0) =/= 0.U) {
+      wresp := 2.U /*SLVERR*/
+    } .otherwise {
+      wresp := 0.U /*EXOKAY*/
+    }
+    wd_ready := true.B
+  }
+
+  when(io.rd.ready) {
+    rd_valid := true.B
+  }
+}

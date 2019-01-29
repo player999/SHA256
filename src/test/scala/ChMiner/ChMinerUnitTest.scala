@@ -269,12 +269,103 @@ class sha256UnitTester(c: Sha256Calc) extends PeekPokeTester(c) {
   expect(c.io.hout.h,  BigInt("19db06c1", 16))
 
 }
+
+class sha256AXI4UnitTester(c: Sha256AXI4) extends PeekPokeTester(c) {
+  def writeAXI(address: BigInt, data: BigInt): UInt = {
+    poke(c.io.wa.addr, address)
+    poke(c.io.wa.valid, true.B)
+    step(1)
+    poke(c.io.wa.addr, 0)
+    poke(c.io.wa.valid, false.B)
+    poke(c.io.wd.data, data)
+    poke(c.io.wd.valid, true.B)
+    poke(c.io.wd.strb, 0xF)
+    step(1)
+    poke(c.io.wd.valid, false.B)
+    poke(c.io.wd.data, 0)
+    poke(c.io.wd.strb, 0x0)
+    return c.io.b.resp
+  }
+
+  def readAXI(address: BigInt): UInt = {
+    poke(c.io.ra.addr, address)
+    poke(c.io.ra.valid, true.B)
+    step(1)
+    poke(c.io.ra.valid, false.B)
+    poke(c.io.ra.addr, 0)
+    return c.io.rd.data
+  }
+  expect(writeAXI(BigInt("00", 16), BigInt("01", 16)), 0)
+  expect(writeAXI(BigInt("00", 16), BigInt("00", 16)), 0)
+
+  expect(writeAXI(BigInt("04", 16), BigInt("61626364", 16)), 0)
+  expect(writeAXI(BigInt("08", 16), BigInt("62636465", 16)), 0)
+  expect(writeAXI(BigInt("0C", 16), BigInt("63646566", 16)), 0)
+  expect(writeAXI(BigInt("10", 16), BigInt("64656667", 16)), 0)
+  expect(writeAXI(BigInt("14", 16), BigInt("65666768", 16)), 0)
+  expect(writeAXI(BigInt("18", 16), BigInt("66676869", 16)), 0)
+  expect(writeAXI(BigInt("1C", 16), BigInt("6768696a", 16)), 0)
+  expect(writeAXI(BigInt("20", 16), BigInt("68696a6b", 16)), 0)
+  expect(writeAXI(BigInt("24", 16), BigInt("696a6b6c", 16)), 0)
+  expect(writeAXI(BigInt("28", 16), BigInt("6a6b6c6d", 16)), 0)
+  expect(writeAXI(BigInt("2C", 16), BigInt("6b6c6d6e", 16)), 0)
+  expect(writeAXI(BigInt("30", 16), BigInt("6c6d6e6f", 16)), 0)
+  expect(writeAXI(BigInt("34", 16), BigInt("6d6e6f70", 16)), 0)
+  expect(writeAXI(BigInt("38", 16), BigInt("6e6f7071", 16)), 0)
+  expect(writeAXI(BigInt("3C", 16), BigInt("80000000", 16)), 0)
+  expect(writeAXI(BigInt("40", 16), BigInt("00000000", 16)), 0)
+
+  expect(writeAXI(BigInt("00", 16), BigInt("02", 16)), 0)
+  expect(writeAXI(BigInt("00", 16), BigInt("00", 16)), 0)
+  step(70)
+  expect(readAXI(BigInt("00", 16)), 4)
+  expect(readAXI(BigInt("44", 16)), BigInt("85e655d6", 16))
+  expect(readAXI(BigInt("48", 16)), BigInt("417a1795", 16))
+  expect(readAXI(BigInt("4C", 16)), BigInt("3363376a", 16))
+  expect(readAXI(BigInt("50", 16)), BigInt("624cde5c", 16))
+  expect(readAXI(BigInt("54", 16)), BigInt("76e09589", 16))
+  expect(readAXI(BigInt("58", 16)), BigInt("cac5f811", 16))
+  expect(readAXI(BigInt("5C", 16)), BigInt("cc4b32c1", 16))
+  expect(readAXI(BigInt("60", 16)), BigInt("f20e533a", 16))
+
+  expect(writeAXI(BigInt("04", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("08", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("0C", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("10", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("14", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("18", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("1C", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("20", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("24", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("28", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("2C", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("30", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("34", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("38", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("3C", 16), BigInt("00000000", 16)), 0)
+  expect(writeAXI(BigInt("40", 16), BigInt("000001c0", 16)), 0)
+
+  expect(writeAXI(BigInt("00", 16), BigInt("02", 16)), 0)
+  expect(writeAXI(BigInt("00", 16), BigInt("00", 16)), 0)
+  step(70)
+  expect(readAXI(BigInt("00", 16)), 4)
+  expect(readAXI(BigInt("44", 16)), BigInt("248d6a61", 16))
+  expect(readAXI(BigInt("48", 16)), BigInt("d20638b8", 16))
+  expect(readAXI(BigInt("4C", 16)), BigInt("e5c02693", 16))
+  expect(readAXI(BigInt("50", 16)), BigInt("0c3e6039", 16))
+  expect(readAXI(BigInt("54", 16)), BigInt("a33ce459", 16))
+  expect(readAXI(BigInt("58", 16)), BigInt("64ff2167", 16))
+  expect(readAXI(BigInt("5C", 16)), BigInt("f6ecedd4", 16))
+  expect(readAXI(BigInt("60", 16)), BigInt("19db06c1", 16))
+
+  step(4)
+}
 class ChMinerTester extends ChiselFlatSpec {
   private val backendNames = if (false && firrtl.FileUtils.isCommandAvailable(Seq("verilator", "--version"))) {
     Array("firrtl", "verilator")
   }
   else {
-    Array("firrtl")
+    Array("firrtl", "verilator")
   }
   for (backendName <- backendNames) {
     "ChMiner" should s"calculate E value of sha256 (with $backendName)" in {
@@ -282,65 +373,61 @@ class ChMinerTester extends ChiselFlatSpec {
         c => new calculateEUnitTester(c)
       } should be(true)
     }
-  }
-
-  for (backendName <- backendNames) {
     "ChMiner" should s"calculate A value of sha256 (with $backendName)" in {
       Driver(() => new calculateA, backendName) {
         c => new calculateAUnitTester(c)
       } should be(true)
     }
-  }
-
-  for (backendName <- backendNames) {
     "ChMiner" should s"calculate sha256 step(with $backendName)" in {
       Driver(() => new calculateStep, backendName) {
         c => new calculateStepUnitTester(c)
       } should be(true)
     }
-  }
-
-  for (backendName <- backendNames) {
     "ChMiner" should s"calculate sha256 ALL wo pipeline(with $backendName)" in {
       Driver(() => new calculateAll(16), backendName) {
         c => new calculateAllUnitTester(c)
       } should be(true)
     }
-  }
-
-  for (backendName <- backendNames) {
     "ChMiner" should s"Hregister (with $backendName)" in {
       Driver(() => new Hregister, backendName) {
         c => new hregisterUnitTester(c)
       } should be(true)
     }
-  }
-
-  for (backendName <- backendNames) {
     "ChMiner" should s"Kmemory (with $backendName)" in {
       Driver(() => new Kmemory, backendName) {
         c => new kmemoryUnitTester(c)
       } should be(true)
     }
-  }
-
-  for (backendName <- backendNames) {
     "ChMiner" should s"Wcalc (with $backendName)" in {
       Driver(() => new Wcalc, backendName) {
         c => new wcalcUnitTester(c)
       } should be(true)
     }
-  }
-
-  for (backendName <- backendNames) {
     "ChMiner" should s"SHA256 Calculator (with $backendName)" in {
       Driver(() => new Sha256Calc, backendName) {
         c => new sha256UnitTester(c)
       } should be(true)
     }
+    "ChMiner" should s"AXI4 SHA256 Calculator (with $backendName)" in {
+      Driver(() => new Sha256AXI4, backendName) {
+        c => new sha256AXI4UnitTester(c)
+      } should be(true)
+    }
+  }
+}
+
+class ChMinerTesterAXI4 extends ChiselFlatSpec {
+  "ChMiner" should s"AXI4 SHA256 Calculator (with verilator)" in {
+    Driver(() => new Sha256AXI4, "verilator") {
+      c => new sha256AXI4UnitTester(c)
+    } should be(true)
   }
 }
 
 object ChSHA256 extends App {
   Driver.executeFirrtlRepl(args, () => new Sha256Calc)
+}
+
+object ChSHA256AXI4 extends App {
+  Driver.executeFirrtlRepl(args, () => new Sha256AXI4)
 }
