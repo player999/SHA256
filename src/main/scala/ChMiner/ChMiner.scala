@@ -428,14 +428,14 @@ class Sha256Calc extends Module {
   Kt.io.A <> count
   step.io.Wt <> Wt.io.out
   Wt.io.W <> io.M
-  Wt.io.ld <> io.start
+  Wt.io.ld <> (io.start & (state === s_idle))
   H0.io.init <> io.init
   step.io.hin := H0.io.hout
   H0.io.hin <> step.io.hout
   io.ready <> ready
   Wt.io.inc <> inc
   H0.io.inc <> inc
-  H0.io.start <> io.start
+  H0.io.start <> (io.start & (state === s_idle))
 
   io.hout <> H0.io.hout
 
@@ -454,9 +454,6 @@ class Sha256Calc extends Module {
     is (s_work) {
       count := count + 1.U(6.W)
       when(io.init) {
-        state := s_idle
-      }
-      when(io.start) {
         state := s_idle
       }
       when(count === 63.U) {
@@ -734,7 +731,7 @@ class Sha256Avalon extends Module {
       is(0.U) {
         init := wdata(0)
         when(wdata(1) === true.B) {
-          start := 1.U(2.W)
+          start := 3.U(2.W)
         } .otherwise {
           start := 0.U(2.W)
         }
