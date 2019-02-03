@@ -496,6 +496,46 @@ class B_AXI4 extends Bundle {
   val resp = Output(UInt(2.W))
 }
 
+class AvalonSlave(aw: Int, dw: Int) extends Bundle {
+  val addr = Input(UInt(aw.W))
+  val rd = Input(Bool())
+  val rdata = Output(UInt(dw.W))
+  val wr = Input(Bool())
+  val wdata = Input(UInt(dw.W))
+}
+/*
+Memory MAP
+0x00 - Control Status Register
+       0: init  (R/W)
+       1: start (R/W)
+       2: ready (R)
+0x04 - Message0 (R/W)
+0x08 - Message1 (R/W)
+0x0C - Message2 (R/W)
+0x10 - Message3 (R/W)
+0x14 - Message4 (R/W)
+0x18 - Message5 (R/W)
+0x1C - Message6 (R/W)
+0x20 - Message7 (R/W)
+0x24 - Message8 (R/W)
+0x28 - Message9 (R/W)
+0x2C - Message10 (R/W)
+0x30 - Message11 (R/W)
+0x34 - Message12 (R/W)
+0x38 - Message13 (R/W)
+0x3C - Message14 (R/W)
+0x40 - Message15 (R/W)
+0x44 - Hash0 (R)
+0x48 - Hash1 (R)
+0x4C - Hash2 (R)
+0x50 - Hash3 (R)
+0x54 - Hash4 (R)
+0x58 - Hash5 (R)
+0x5C - Hash6 (R)
+0x60 - Hash7 (R)
+0x64 - Hash8 (R)
+*/
+
 class Sha256AXI4 extends Module {
   val io = IO(new Bundle {
     val wa = new AC_AXI4(8)
@@ -532,38 +572,6 @@ class Sha256AXI4 extends Module {
   val Mreg15 = RegInit(0.U(32.W))
   val init = RegInit(false.B)
   val start = RegInit(false.B)
-  /*
-  Memory MAP
-  0x00 - Control Status Register
-         0: init  (R/W)
-         1: start (R/W)
-         2: ready (R)
-  0x04 - Message0 (R/W)
-  0x08 - Message1 (R/W)
-  0x0C - Message2 (R/W)
-  0x10 - Message3 (R/W)
-  0x14 - Message4 (R/W)
-  0x18 - Message5 (R/W)
-  0x1C - Message6 (R/W)
-  0x20 - Message7 (R/W)
-  0x24 - Message8 (R/W)
-  0x28 - Message9 (R/W)
-  0x2C - Message10 (R/W)
-  0x30 - Message11 (R/W)
-  0x34 - Message12 (R/W)
-  0x38 - Message13 (R/W)
-  0x3C - Message14 (R/W)
-  0x40 - Message15 (R/W)
-  0x44 - Hash0 (R)
-  0x48 - Hash1 (R)
-  0x4C - Hash2 (R)
-  0x50 - Hash3 (R)
-  0x54 - Hash4 (R)
-  0x58 - Hash5 (R)
-  0x5C - Hash6 (R)
-  0x60 - Hash7 (R)
-  0x64 - Hash8 (R)
-  */
   io.wa.ready <> wa_ready
   io.ra.ready <> ra_ready
   io.wd.ready <> wd_ready
@@ -591,7 +599,7 @@ class Sha256AXI4 extends Module {
   calc.io.M(14) := Mreg14
   calc.io.M(15) := Mreg15
   init := 0.U
-  start := 0.U
+  start := false.B
   when(io.wa.valid) {
     waddr := io.wa.addr
   }
@@ -666,5 +674,117 @@ class Sha256AXI4 extends Module {
 
   when(io.rd.ready) {
     rd_valid := true.B
+  }
+}
+
+class Sha256Avalon extends Module {
+  val io = IO(new Bundle {
+    val slave = new AvalonSlave(6, 32)
+  })
+  val rdata = RegInit(0.U(32.W))
+  val wdata = RegInit(0.U(32.W))
+  val base_index = RegInit(0.U(8.W))
+
+  val calc = Module(new Sha256Calc)
+  val Mreg0 = RegInit(0.U(32.W))
+  val Mreg1 = RegInit(0.U(32.W))
+  val Mreg2 = RegInit(0.U(32.W))
+  val Mreg3 = RegInit(0.U(32.W))
+  val Mreg4 = RegInit(0.U(32.W))
+  val Mreg5 = RegInit(0.U(32.W))
+  val Mreg6 = RegInit(0.U(32.W))
+  val Mreg7 = RegInit(0.U(32.W))
+  val Mreg8 = RegInit(0.U(32.W))
+  val Mreg9 = RegInit(0.U(32.W))
+  val Mreg10 = RegInit(0.U(32.W))
+  val Mreg11 = RegInit(0.U(32.W))
+  val Mreg12 = RegInit(0.U(32.W))
+  val Mreg13 = RegInit(0.U(32.W))
+  val Mreg14 = RegInit(0.U(32.W))
+  val Mreg15 = RegInit(0.U(32.W))
+  val init = RegInit(false.B)
+  val start = RegInit(0.U(2.W))
+
+  io.slave.rdata := rdata
+  calc.io.init := init
+  calc.io.start := start(0) | start(1)
+  calc.io.M(0) := Mreg0
+  calc.io.M(1) := Mreg1
+  calc.io.M(2) := Mreg2
+  calc.io.M(3) := Mreg3
+  calc.io.M(4) := Mreg4
+  calc.io.M(5) := Mreg5
+  calc.io.M(6) := Mreg6
+  calc.io.M(7) := Mreg7
+  calc.io.M(8) := Mreg8
+  calc.io.M(9) := Mreg9
+  calc.io.M(10) := Mreg10
+  calc.io.M(11) := Mreg11
+  calc.io.M(12) := Mreg12
+  calc.io.M(13) := Mreg13
+  calc.io.M(14) := Mreg14
+  calc.io.M(15) := Mreg15
+  init := 0.U
+  start := (start >> 1.U).asUInt()
+
+  when(io.slave.wr) {
+    base_index := io.slave.addr
+    wdata := io.slave.wdata
+    switch(base_index) {
+      is(0.U) {
+        init := wdata(0)
+        when(wdata(1) === true.B) {
+          start := 1.U(2.W)
+        } .otherwise {
+          start := 0.U(2.W)
+        }
+      }
+      is(1.U) {Mreg0 := wdata}
+      is(2.U) {Mreg1 := wdata}
+      is(3.U) {Mreg2 := wdata}
+      is(4.U) {Mreg3 := wdata}
+      is(5.U) {Mreg4 := wdata}
+      is(6.U) {Mreg5 := wdata}
+      is(7.U) {Mreg6 := wdata}
+      is(8.U) {Mreg7 := wdata}
+      is(9.U) {Mreg8 := wdata}
+      is(10.U) {Mreg9 := wdata}
+      is(11.U) {Mreg10 := wdata}
+      is(12.U) {Mreg11 := wdata}
+      is(13.U) {Mreg12 := wdata}
+      is(14.U) {Mreg13 := wdata}
+      is(15.U) {Mreg14 := wdata}
+      is(16.U) {Mreg15 := wdata}
+    }
+  } .elsewhen(io.slave.rd) {
+    switch(io.slave.addr) {
+      is(0.U) {
+        rdata := Cat(calc.io.ready, start(0) | start(1), init)
+      }
+      is(1.U) {rdata := Mreg0}
+      is(2.U) {rdata := Mreg1}
+      is(3.U) {rdata := Mreg2}
+      is(4.U) {rdata := Mreg3}
+      is(5.U) {rdata := Mreg4}
+      is(6.U) {rdata := Mreg5}
+      is(7.U) {rdata := Mreg6}
+      is(8.U) {rdata := Mreg7}
+      is(9.U) {rdata := Mreg8}
+      is(10.U) {rdata := Mreg9}
+      is(11.U) {rdata := Mreg10}
+      is(12.U) {rdata := Mreg11}
+      is(13.U) {rdata := Mreg12}
+      is(14.U) {rdata := Mreg13}
+      is(15.U) {rdata := Mreg14}
+      is(16.U) {rdata := Mreg15}
+      is(17.U) {rdata := calc.io.hout.a}
+      is(18.U) {rdata := calc.io.hout.b}
+      is(19.U) {rdata := calc.io.hout.c}
+      is(20.U) {rdata := calc.io.hout.d}
+      is(21.U) {rdata := calc.io.hout.e}
+      is(22.U) {rdata := calc.io.hout.f}
+      is(23.U) {rdata := calc.io.hout.g}
+      is(24.U) {rdata := calc.io.hout.h}
+    }
   }
 }

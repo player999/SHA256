@@ -360,6 +360,90 @@ class sha256AXI4UnitTester(c: Sha256AXI4) extends PeekPokeTester(c) {
 
   step(4)
 }
+
+class sha256AvalonUnitTester(c: Sha256Avalon) extends PeekPokeTester(c) {
+  def writeAvalon(address: BigInt, data: BigInt): UInt = {
+    poke(c.io.slave.addr, address >> 2)
+    poke(c.io.slave.wdata, data)
+    poke(c.io.slave.wr, true.B)
+    step(1)
+    poke(c.io.slave.wr, false.B)
+    return 0.U
+  }
+
+  def readAvalon(address: BigInt): UInt = {
+    poke(c.io.slave.addr, address >> 2)
+    poke(c.io.slave.rd, true.B)
+    step(1)
+    poke(c.io.slave.rd, false.B)
+    return c.io.slave.rdata
+  }
+  expect(writeAvalon(BigInt("00", 16), BigInt("01", 16)), 0)
+  expect(writeAvalon(BigInt("00", 16), BigInt("00", 16)), 0)
+
+  expect(writeAvalon(BigInt("04", 16), BigInt("61626364", 16)), 0)
+  expect(writeAvalon(BigInt("08", 16), BigInt("62636465", 16)), 0)
+  expect(writeAvalon(BigInt("0C", 16), BigInt("63646566", 16)), 0)
+  expect(writeAvalon(BigInt("10", 16), BigInt("64656667", 16)), 0)
+  expect(writeAvalon(BigInt("14", 16), BigInt("65666768", 16)), 0)
+  expect(writeAvalon(BigInt("18", 16), BigInt("66676869", 16)), 0)
+  expect(writeAvalon(BigInt("1C", 16), BigInt("6768696a", 16)), 0)
+  expect(writeAvalon(BigInt("20", 16), BigInt("68696a6b", 16)), 0)
+  expect(writeAvalon(BigInt("24", 16), BigInt("696a6b6c", 16)), 0)
+  expect(writeAvalon(BigInt("28", 16), BigInt("6a6b6c6d", 16)), 0)
+  expect(writeAvalon(BigInt("2C", 16), BigInt("6b6c6d6e", 16)), 0)
+  expect(writeAvalon(BigInt("30", 16), BigInt("6c6d6e6f", 16)), 0)
+  expect(writeAvalon(BigInt("34", 16), BigInt("6d6e6f70", 16)), 0)
+  expect(writeAvalon(BigInt("38", 16), BigInt("6e6f7071", 16)), 0)
+  expect(writeAvalon(BigInt("3C", 16), BigInt("80000000", 16)), 0)
+  expect(writeAvalon(BigInt("40", 16), BigInt("00000000", 16)), 0)
+
+  expect(writeAvalon(BigInt("00", 16), BigInt("02", 16)), 0)
+  expect(writeAvalon(BigInt("00", 16), BigInt("00", 16)), 0)
+  step(70)
+  expect(readAvalon(BigInt("00", 16)), 4)
+  expect(readAvalon(BigInt("44", 16)), BigInt("85e655d6", 16))
+  expect(readAvalon(BigInt("48", 16)), BigInt("417a1795", 16))
+  expect(readAvalon(BigInt("4C", 16)), BigInt("3363376a", 16))
+  expect(readAvalon(BigInt("50", 16)), BigInt("624cde5c", 16))
+  expect(readAvalon(BigInt("54", 16)), BigInt("76e09589", 16))
+  expect(readAvalon(BigInt("58", 16)), BigInt("cac5f811", 16))
+  expect(readAvalon(BigInt("5C", 16)), BigInt("cc4b32c1", 16))
+  expect(readAvalon(BigInt("60", 16)), BigInt("f20e533a", 16))
+
+  expect(writeAvalon(BigInt("04", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("08", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("0C", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("10", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("14", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("18", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("1C", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("20", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("24", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("28", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("2C", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("30", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("34", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("38", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("3C", 16), BigInt("00000000", 16)), 0)
+  expect(writeAvalon(BigInt("40", 16), BigInt("000001c0", 16)), 0)
+
+  expect(writeAvalon(BigInt("00", 16), BigInt("02", 16)), 0)
+  expect(writeAvalon(BigInt("00", 16), BigInt("00", 16)), 0)
+  step(70)
+  expect(readAvalon(BigInt("00", 16)), 4)
+  expect(readAvalon(BigInt("44", 16)), BigInt("248d6a61", 16))
+  expect(readAvalon(BigInt("48", 16)), BigInt("d20638b8", 16))
+  expect(readAvalon(BigInt("4C", 16)), BigInt("e5c02693", 16))
+  expect(readAvalon(BigInt("50", 16)), BigInt("0c3e6039", 16))
+  expect(readAvalon(BigInt("54", 16)), BigInt("a33ce459", 16))
+  expect(readAvalon(BigInt("58", 16)), BigInt("64ff2167", 16))
+  expect(readAvalon(BigInt("5C", 16)), BigInt("f6ecedd4", 16))
+  expect(readAvalon(BigInt("60", 16)), BigInt("19db06c1", 16))
+
+  step(4)
+}
+
 class ChMinerTester extends ChiselFlatSpec {
   private val backendNames = if (false && firrtl.FileUtils.isCommandAvailable(Seq("verilator", "--version"))) {
     Array("firrtl", "verilator")
@@ -413,6 +497,11 @@ class ChMinerTester extends ChiselFlatSpec {
         c => new sha256AXI4UnitTester(c)
       } should be(true)
     }
+    "ChMiner" should s"Avalon SHA256 Calculator (with $backendName)" in {
+      Driver(() => new Sha256Avalon, backendName) {
+        c => new sha256AvalonUnitTester(c)
+      } should be(true)
+    }
   }
 }
 
@@ -420,6 +509,14 @@ class ChMinerTesterAXI4 extends ChiselFlatSpec {
   "ChMiner" should s"AXI4 SHA256 Calculator (with verilator)" in {
     Driver(() => new Sha256AXI4, "verilator") {
       c => new sha256AXI4UnitTester(c)
+    } should be(true)
+  }
+}
+
+class ChMinerTesterAvalon extends ChiselFlatSpec {
+  "ChMiner" should s"Avalon SHA256 Calculator (with verilator)" in {
+    Driver(() => new Sha256Avalon, "verilator") {
+      c => new sha256AvalonUnitTester(c)
     } should be(true)
   }
 }
